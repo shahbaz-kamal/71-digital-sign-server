@@ -27,17 +27,27 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-// *creating collections
+    // *creating collections
 
-const serviceCollection=client.db('71-digital-sign-db').collection('services')
+    const serviceCollection = client
+      .db("71-digital-sign-db")
+      .collection("services");
+    const testimonialCollection = client
+      .db("71-digital-sign-db")
+      .collection("testimonials");
 
-// !all public API
-// *service related api
-app.get('/services',async(req,res)=>{
-  const result=await serviceCollection.find().toArray()
-  res.send(result)
-})
+    // !all public API
+    // *service related api
+    app.get("/services", async (req, res) => {
+      const result = await serviceCollection.find().toArray();
+      res.send(result);
+    });
+    // *testimonial related api
 
+    app.get("/testimonials", async (req, res) => {
+      const result = await testimonialCollection.find().toArray();
+      res.send(result);
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
