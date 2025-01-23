@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const port = process.env.PORT || 7800;
@@ -36,6 +37,34 @@ async function run() {
       .db("71-digital-sign-db")
       .collection("testimonials");
     const userCollection = client.db("71-digital-sign-db").collection("users");
+
+    // *jwt related
+    app.post("/jwt", async (req, res) => {
+      // payload
+      const user = req.body;
+      // generating token
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1h",
+      });
+      res.send({ token });
+    });
+
+    // *middlewares
+
+    const verifyToken = (req, res, next) => {
+      console.log("inside verify Token", req.headers);
+      if (!req.headers.authorization) {
+        return res.status(401).send({ message: "forbidden access" });
+      }
+      const token = req.headers.authorization.split(" ")[1];
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+          return res.status(401).send({ message: "forbidden access" });
+        }
+        req.decoded = decoded;
+        next();
+      });
+    };
 
     // !all public API
     // *service related api
