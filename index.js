@@ -35,6 +35,7 @@ async function run() {
     const testimonialCollection = client
       .db("71-digital-sign-db")
       .collection("testimonials");
+    const userCollection = client.db("71-digital-sign-db").collection("users");
 
     // !all public API
     // *service related api
@@ -48,7 +49,32 @@ async function run() {
       const result = await testimonialCollection.find().toArray();
       res.send(result);
     });
-
+    // !user related api
+    // publis:storing user data to the db
+    app.post("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const newUser = req.body;
+      // checking if user exist
+      const query = { email };
+      const isExist = await userCollection.findOne(query);
+      if (isExist) {
+        const result = { message: "User already Exists in the Database" };
+        res.send(result);
+      } else {
+        const result = await userCollection.insertOne({
+          ...newUser,
+          timeStamp: Date.now(),
+        });
+        res.send(result);
+      }
+    });
+    // private: fetching user photoUrl for navbar (under verify token)
+    app.get(`/user/:email`, async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const result = await userCollection.findOne(query).toArray();
+      res.send(result);
+    });
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
