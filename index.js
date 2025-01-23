@@ -69,10 +69,10 @@ async function run() {
       }
     });
     // private: fetching user photoUrl for navbar (under verify token)
-    app.get(`/user/:email`, async (req, res) => {
+    app.get("/user/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email };
-      const result = await userCollection.findOne(query).toArray();
+      const result = await userCollection.findOne(query);
       res.send(result);
     });
     await client.db("admin").command({ ping: 1 });
