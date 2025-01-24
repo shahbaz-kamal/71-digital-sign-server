@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 7800;
 const app = express();
 
@@ -116,15 +116,8 @@ async function run() {
     });
 
     // *Employee related APIS
-    // posting new task data (should be private rout)
-    app.post("/work-sheet", verifyToken, async (req, res) => {
-      const newTask = req.body;
-      const result = await taskCollection.insertOne(newTask);
-      res.send(result);
-    });
-
     // getting task data from db :private route
-    app.get("/tasks/:email", async (req, res) => {
+    app.get("/tasks/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { email };
       const result = await taskCollection
@@ -134,10 +127,29 @@ async function run() {
       res.send(result);
     });
 
+    // posting new task data (should be private rout)
+    app.post("/work-sheet", verifyToken, async (req, res) => {
+      const newTask = req.body;
+      const result = await taskCollection.insertOne(newTask);
+      res.send(result);
+    });
+        // deleting worksheet data(private route)
+
+        app.delete("/work-sheet/:id",verifyToken,async(req,res)=>{
+          const id=req.params.id;
+          const query={_id:new ObjectId(id)}
+          const result=await taskCollection.deleteOne(query)
+          res.send(result) 
+        })
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
+
+
+
+
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
