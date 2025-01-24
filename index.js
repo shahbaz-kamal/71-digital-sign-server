@@ -133,23 +133,36 @@ async function run() {
       const result = await taskCollection.insertOne(newTask);
       res.send(result);
     });
-        // deleting worksheet data(private route)
 
-        app.delete("/work-sheet/:id",verifyToken,async(req,res)=>{
-          const id=req.params.id;
-          const query={_id:new ObjectId(id)}
-          const result=await taskCollection.deleteOne(query)
-          res.send(result) 
-        })
+    // updating worksheet data
+    app.patch("/update/work-sheet/:id", verifyToken, async (req, res) => {
+      const updatedData = req.body;
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          task: updatedData.task,
+          hoursWorked: updatedData.hoursWorked,
+          date: updatedData.date,
+        },
+      };
+      const result = await taskCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
+    // deleting worksheet data(private route)
+
+    app.delete("/work-sheet/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await taskCollection.deleteOne(query);
+      res.send(result);
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
-
-
-
-
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
