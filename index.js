@@ -93,15 +93,25 @@ async function run() {
         const result = await userCollection.insertOne({
           ...newUser,
           timeStamp: Date.now(),
+          status: "pending",
         });
         res.send(result);
       }
     });
     // private: fetching user photoUrl for navbar (under verify token)
-    app.get("/user/:email", async (req, res) => {
+    app.get("/user/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { email };
       const result = await userCollection.findOne(query);
+      res.send(result);
+    });
+
+    // getting role (should be private route)
+
+    app.get("/role/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+
+      const result = await userCollection.findOne({ email });
       res.send(result);
     });
     await client.db("admin").command({ ping: 1 });
