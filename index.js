@@ -37,6 +37,7 @@ async function run() {
       .db("71-digital-sign-db")
       .collection("testimonials");
     const userCollection = client.db("71-digital-sign-db").collection("users");
+    const taskCollection = client.db("71-digital-sign-db").collection("tasks");
 
     // *jwt related
     app.post("/jwt", async (req, res) => {
@@ -110,10 +111,29 @@ async function run() {
 
     app.get("/role/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
-
       const result = await userCollection.findOne({ email });
       res.send(result);
     });
+
+    // *Employee related APIS
+    // posting new task data (should be private rout)
+    app.post("/work-sheet", verifyToken, async (req, res) => {
+      const newTask = req.body;
+      const result = await taskCollection.insertOne(newTask);
+      res.send(result);
+    });
+
+    // getting task data from db :private route
+    app.get("/tasks/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const result = await taskCollection
+        .find(query)
+        .sort({ date: -1 })
+        .toArray();
+      res.send(result);
+    });
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
