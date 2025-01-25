@@ -95,6 +95,7 @@ async function run() {
           ...newUser,
           timeStamp: Date.now(),
           isVerified: false,
+          isFired: false,
         });
         res.send(result);
       }
@@ -168,16 +169,16 @@ async function run() {
       res.send(result);
     });
     // getting task data for HR with filters (by employee and month)
-    app.get("/progress/tasks", async (req, res) => {
+    app.get("/progress/tasks", verifyToken, async (req, res) => {
       const { employeeName, month } = req.query;
-    
+
       // Check if the month is provided
       let query = {};
       if (employeeName) {
         query.name = employeeName;
       }
       if (month) {
-        const monthNumber = new Date(`${month} 1, 2000`).getMonth() + 1; 
+        const monthNumber = new Date(`${month} 1, 2000`).getMonth() + 1;
         query = {
           ...query,
           $expr: {
@@ -185,15 +186,16 @@ async function run() {
           },
         };
       }
-    
+
       try {
         const records = await taskCollection.find(query).toArray();
         res.send(records);
       } catch (error) {
-        res.status(500).send({ message: "Failed to fetch work records", error });
+        res
+          .status(500)
+          .send({ message: "Failed to fetch work records", error });
       }
     });
-    
 
     // getting all-empoyee data(private) (if query present it will give only employee data & if not it will give all employee data)
 
@@ -217,6 +219,59 @@ async function run() {
       const updatedDoc = {
         $set: {
           isVerified: true,
+        },
+      };
+      const result = await userCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
+    // *admin related apis
+    // checking if user is fired or not(public as it should be checked before Login)
+
+    app.get("/fire/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.patch("/update/salary/:id", verifyToken, async (req, res) => {
+      const { salaryData } = req.body;
+
+      const id = req.params.id;
+      console.log("ID:", id);
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          salary: salaryData,
+        },
+      };
+      const result = await userCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
+    // making hr
+    app.patch("/role/makeHr/:id", verifyToken, async (req, res) => {
+      const { roleData } = req.body;
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          role: roleData,
+        },
+      };
+      const result = await userCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
+    // firing an employee
+
+    app.patch("/fire/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          isFired: true,
         },
       };
       const result = await userCollection.updateOne(filter, updatedDoc);
