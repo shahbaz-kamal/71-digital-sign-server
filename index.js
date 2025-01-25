@@ -215,7 +215,12 @@ async function run() {
       res.send(result);
     });
 
-    // for payment collection
+    // //for payment collection
+
+    app.get("/payment", verifyToken, async (req, res) => {
+      const result = await paymentCollection.find().toArray();
+      res.send(result);
+    });
 
     app.post("/payment", verifyToken, async (req, res) => {
       const newPaymentData = req.body;
