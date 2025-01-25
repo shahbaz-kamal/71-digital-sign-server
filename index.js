@@ -38,6 +38,9 @@ async function run() {
       .collection("testimonials");
     const userCollection = client.db("71-digital-sign-db").collection("users");
     const taskCollection = client.db("71-digital-sign-db").collection("tasks");
+    const paymentCollection = client
+      .db("71-digital-sign-db")
+      .collection("payments");
 
     // *jwt related
     app.post("/jwt", async (req, res) => {
@@ -210,6 +213,34 @@ async function run() {
       }
       const result = await userCollection.find(filter).toArray();
       res.send(result);
+    });
+
+    // for payment collection
+
+    app.post("/payment", verifyToken, async (req, res) => {
+      const newPaymentData = req.body;
+      const query = {
+        month: newPaymentData.month,
+        year: newPaymentData.year,
+        employee_email: newPaymentData.employee_email,
+      };
+      const alreadySubmittedForVerification = await paymentCollection.findOne(
+        query
+      );
+      if (alreadySubmittedForVerification) {
+        const result = {
+          message: "Already Submitted Payment request for This Month & Year",
+        };
+        res.send(result);
+      } else {
+        const result = await paymentCollection.insertOne({
+          ...newPaymentData,
+          authorizedBy: null,
+          trxId: null,
+          isAuthorized: false,
+        });
+        res.send(result);
+      }
     });
 
     // updating verified status(private)
