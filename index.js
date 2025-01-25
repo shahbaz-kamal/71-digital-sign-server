@@ -116,6 +116,7 @@ async function run() {
     });
 
     // *Employee related APIS
+
     // getting task data from db :private route
     app.get("/tasks/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
@@ -160,6 +161,40 @@ async function run() {
     });
 
     // *HR related apis
+
+    // getting user data for dynamic name in the progress page
+    app.get("/progress/users", verifyToken, async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+    // getting task data for HR with filters (by employee and month)
+    app.get("/progress/tasks", async (req, res) => {
+      const { employeeName, month } = req.query;
+    
+      // Check if the month is provided
+      let query = {};
+      if (employeeName) {
+        query.name = employeeName;
+      }
+      if (month) {
+        const monthNumber = new Date(`${month} 1, 2000`).getMonth() + 1; 
+        query = {
+          ...query,
+          $expr: {
+            $eq: [{ $month: { $toDate: "$date" } }, monthNumber],
+          },
+        };
+      }
+    
+      try {
+        const records = await taskCollection.find(query).toArray();
+        res.send(records);
+      } catch (error) {
+        res.status(500).send({ message: "Failed to fetch work records", error });
+      }
+    });
+    
+
     // getting all-empoyee data(private) (if query present it will give only employee data & if not it will give all employee data)
 
     app.get("/all-employee-list", verifyToken, async (req, res) => {
