@@ -53,7 +53,7 @@ async function run() {
     // *middlewares
 
     const verifyToken = (req, res, next) => {
-      console.log("inside verify Token", req.headers);
+      // console.log("inside verify Token", req.headers);
       if (!req.headers.authorization) {
         return res.status(401).send({ message: "forbidden access" });
       }
@@ -94,7 +94,7 @@ async function run() {
         const result = await userCollection.insertOne({
           ...newUser,
           timeStamp: Date.now(),
-          status: "pending",
+          isVerified: false,
         });
         res.send(result);
       }
@@ -134,7 +134,7 @@ async function run() {
       res.send(result);
     });
 
-    // updating worksheet data
+    // updating worksheet data(private)
     app.patch("/update/work-sheet/:id", verifyToken, async (req, res) => {
       const updatedData = req.body;
       const id = req.params.id;
@@ -156,6 +156,35 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await taskCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // *HR related apis
+    // getting all-empoyee data(private) (if query present it will give only employee data & if not it will give all employee data)
+
+    app.get("/all-employee-list", verifyToken, async (req, res) => {
+      const query = req.query.employee;
+      let filter = {};
+      console.log(query);
+      if (query) {
+        filter = { role: query };
+        // const result = await userCollection.find(filter).toArray();
+        // return res.result;
+      }
+      const result = await userCollection.find(filter).toArray();
+      res.send(result);
+    });
+
+    // updating verified status(private)
+    app.patch("/update/isVerified/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          isVerified: true,
+        },
+      };
+      const result = await userCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
 
