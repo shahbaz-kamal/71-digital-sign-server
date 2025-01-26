@@ -2,12 +2,16 @@ const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 7800;
 const app = express();
 
 // middleware
-const corsOptions = { origin: ["http://localhost:5173"], Credential: true };
+const corsOptions = {
+  origin: ["http://localhost:5173", "http://127.0.0.1:3000"],
+  Credential: true,
+};
 app.use(cors(corsOptions));
 app.use(express.json());
 
@@ -312,6 +316,22 @@ async function run() {
       };
       const result = await userCollection.updateOne(filter, updatedDoc);
       res.send(result);
+    });
+
+    app.post("/create-payment-intent", verifyToken, async (req, res) => {
+      const { salary } = req.body;
+      if (!salary || isNaN(salary)) {
+        return res.status(400).json({ error: "Invalid salary value" });
+      }
+      const totalPrice = parseInt(salary);
+      const {client_secret} = await stripe.paymentIntents.create({
+        amount: totalPrice,
+        currency: "usd",
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      });
+      res.send({client_secret})
     });
 
     await client.db("admin").command({ ping: 1 });
