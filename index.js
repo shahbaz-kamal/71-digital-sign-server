@@ -42,6 +42,9 @@ async function run() {
       .collection("testimonials");
     const userCollection = client.db("71-digital-sign-db").collection("users");
     const taskCollection = client.db("71-digital-sign-db").collection("tasks");
+    const portfolioCollection = client
+      .db("71-digital-sign-db")
+      .collection("portfolio");
     const paymentCollection = client
       .db("71-digital-sign-db")
       .collection("payments");
@@ -84,6 +87,10 @@ async function run() {
 
     app.get("/testimonials", async (req, res) => {
       const result = await testimonialCollection.find().toArray();
+      res.send(result);
+    });
+    app.get("/portfolio", async (req, res) => {
+      const result = await portfolioCollection.find().toArray();
       res.send(result);
     });
     // !user related api
