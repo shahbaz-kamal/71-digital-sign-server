@@ -264,6 +264,14 @@ async function run() {
       const result = await userCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
+    // for details
+
+    app.get("/details/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { employee_email: email };
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    });
 
     // *admin related apis
     // checking if user is fired or not(public as it should be checked before Login)
@@ -324,15 +332,37 @@ async function run() {
         return res.status(400).json({ error: "Invalid salary value" });
       }
       const totalPrice = parseInt(salary);
-      const {client_secret} = await stripe.paymentIntents.create({
+      const { client_secret } = await stripe.paymentIntents.create({
         amount: totalPrice,
         currency: "usd",
         automatic_payment_methods: {
           enabled: true,
         },
       });
-      res.send({client_secret})
+      res.send({ client_secret });
     });
+
+    // after payment is done
+
+    app.patch(
+      "/update/paymentCollection/:id",
+      verifyToken,
+      async (req, res) => {
+        const id = req.params.id;
+        const updatedPaymentInfo = req.body;
+        const filter = { _id: new ObjectId(id) };
+        const updatedDoc = {
+          $set: {
+            authorizedBy: updatedPaymentInfo.authorizedBy,
+            trxId: updatedPaymentInfo.trxId,
+            isAuthorized: updatedPaymentInfo.isAuthorized,
+            paymentDate: new Date(),
+          },
+        };
+        const result = await paymentCollection.updateOne(filter, updatedDoc);
+        res.send(result);
+      }
+    );
 
     await client.db("admin").command({ ping: 1 });
     console.log(
