@@ -42,6 +42,9 @@ async function run() {
       .collection("testimonials");
     const userCollection = client.db("71-digital-sign-db").collection("users");
     const taskCollection = client.db("71-digital-sign-db").collection("tasks");
+    const messageCollection = client
+      .db("71-digital-sign-db")
+      .collection("messages");
     const portfolioCollection = client
       .db("71-digital-sign-db")
       .collection("portfolio");
@@ -83,6 +86,45 @@ async function run() {
       const result = await serviceCollection.find().toArray();
       res.send(result);
     });
+    // getting message data
+
+    app.get("/messages", verifyToken, async (req, res) => {
+      const result = await messageCollection.find().toArray();
+      res.send(result);
+    });
+
+    // posting client message to db
+
+    app.post("/client/message", async (req, res) => {
+      const newMessage = req.body;
+      const result = await messageCollection.insertOne({
+        ...newMessage,
+        isRead: false,
+        readBy: null,
+      });
+      res.send(result);
+    });
+    app.get("/messages", verifyToken, async (req, res) => {
+      const result = await messageCollection.find().toArray();
+      res.send(result);
+    });
+
+    // updating message Data
+    app.patch("/message/update/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const { email } = req.body;
+      console.log("ID & Email", id, email);
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          readBy: email,
+          isRead: true,
+        },
+      };
+      const result = await messageCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
     // *testimonial related api
 
     app.get("/testimonials", async (req, res) => {
