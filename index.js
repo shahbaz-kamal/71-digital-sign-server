@@ -136,6 +136,7 @@ async function run() {
       res.send(result);
     });
     // !user related api
+
     // publis:storing user data to the db
     app.post("/users/:email", async (req, res) => {
       const email = req.params.email;
@@ -163,7 +164,21 @@ async function run() {
       const result = await userCollection.findOne(query);
       res.send(result);
     });
+    // updating profile
 
+    app.patch("/update-profile", verifyToken, async (req, res) => {
+      const { bankAccount, salary, designation, email } = req.body;
+      const filter = { email: email };
+      const updatedDoc = {
+        $set: {
+          bankAccount,
+          salary,
+          designation,
+        },
+      };
+      const result = await userCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
     // getting role (should be private route)
 
     app.get("/role/:email", verifyToken, async (req, res) => {
