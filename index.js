@@ -316,6 +316,30 @@ async function run() {
       }
     });
 
+    // getting payment data count
+    app.get("/paymentCount/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { employee_email: email };
+      const count = await paymentCollection.countDocuments(query);
+      res.send({ count });
+    });
+
+    // get payment data for payment history
+    app.get("/payment-history/:email", verifyToken, async (req, res) => {
+      console.log(req.params.email);
+      const size = parseInt(req.query.size);
+      const page = parseInt(req.query.page);
+      console.log("pagination quer", req.query);
+      const email = req.params.email;
+      const filter = { employee_email: email };
+      const result = await paymentCollection
+        .find(filter)
+        .skip(page * size)
+        .limit(size)
+        .toArray();
+      res.send(result);
+    });
+
     // updating verified status(private)
     app.patch("/update/isVerified/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
