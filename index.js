@@ -9,7 +9,7 @@ const app = express();
 
 // middleware
 const corsOptions = {
-  origin: ["http://localhost:5173", "http://127.0.0.1:3000"],
+  origin: ["http://localhost:5173", "http://127.0.0.1:3000","https://71-digital-sign.netlify.app"],
   Credential: true,
 };
 app.use(cors(corsOptions));
@@ -452,10 +452,10 @@ async function run() {
       }
     );
 
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
