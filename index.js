@@ -343,6 +343,85 @@ async function run() {
         .toArray();
       res.send(result);
     });
+// payment data for overview
+app.get("/payments/summary", async (req, res) => {
+  try {
+    const paymentsSummary = await paymentCollection.aggregate([
+      {
+        $group: {
+          _id: { month: "$month", year: "$year" },
+          totalPayment: { $sum: { $toInt: "$employee_salary" } } // Convert salary to integer before summing
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          totalPayment: 1,
+          monthAndYear: {
+            $concat: [
+              {
+                $substr: [
+                  {
+                    $switch: {
+                      branches: [
+                        { case: { $eq: ["$_id.month", "January"] }, then: "Jan" },
+                        { case: { $eq: ["$_id.month", "February"] }, then: "Feb" },
+                        { case: { $eq: ["$_id.month", "March"] }, then: "Mar" },
+                        { case: { $eq: ["$_id.month", "April"] }, then: "Apr" },
+                        { case: { $eq: ["$_id.month", "May"] }, then: "May" },
+                        { case: { $eq: ["$_id.month", "June"] }, then: "Jun" },
+                        { case: { $eq: ["$_id.month", "July"] }, then: "Jul" },
+                        { case: { $eq: ["$_id.month", "August"] }, then: "Aug" },
+                        { case: { $eq: ["$_id.month", "September"] }, then: "Sep" },
+                        { case: { $eq: ["$_id.month", "October"] }, then: "Oct" },
+                        { case: { $eq: ["$_id.month", "November"] }, then: "Nov" },
+                        { case: { $eq: ["$_id.month", "December"] }, then: "Dec" }
+                      ],
+                      default: "Unknown"
+                    }
+                  },
+                  0,
+                  -1
+                ]
+              },
+              "'",
+              { $substr: [{ $toString: "$_id.year" }, 2, 2] } // Extract last 2 digits of year (e.g., '25' for 2025)
+            ]
+          },
+          year: "$_id.year",
+          monthOrder: {
+            $switch: {
+              branches: [
+                { case: { $eq: ["$_id.month", "January"] }, then: 1 },
+                { case: { $eq: ["$_id.month", "February"] }, then: 2 },
+                { case: { $eq: ["$_id.month", "March"] }, then: 3 },
+                { case: { $eq: ["$_id.month", "April"] }, then: 4 },
+                { case: { $eq: ["$_id.month", "May"] }, then: 5 },
+                { case: { $eq: ["$_id.month", "June"] }, then: 6 },
+                { case: { $eq: ["$_id.month", "July"] }, then: 7 },
+                { case: { $eq: ["$_id.month", "August"] }, then: 8 },
+                { case: { $eq: ["$_id.month", "September"] }, then: 9 },
+                { case: { $eq: ["$_id.month", "October"] }, then: 10 },
+                { case: { $eq: ["$_id.month", "November"] }, then: 11 },
+                { case: { $eq: ["$_id.month", "December"] }, then: 12 }
+              ],
+              default: 0
+            }
+          }
+        }
+      },
+      { $sort: { year: -1, monthOrder: -1 } }, // Sort by year DESC, then by monthOrder DESC
+      { $project: { year: 0, monthOrder: 0 } } // Remove sorting fields from final response
+    ]).toArray();
+
+    res.json(paymentsSummary);
+  } catch (error) {
+    console.error("Error fetching payments summary:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+
 
     // updating verified status(private)
     app.patch("/update/isVerified/:id", verifyToken, async (req, res) => {
