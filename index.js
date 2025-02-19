@@ -186,6 +186,10 @@ async function run() {
       const result = await userCollection.findOne({ email });
       res.send(result);
     });
+    app.get("/all-users",async(req,res)=>{
+      const result=await userCollection.find().toArray()
+      res.send(result)
+    })
 
     // *Employee related APIS
 
